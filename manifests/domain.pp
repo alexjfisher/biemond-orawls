@@ -738,6 +738,20 @@ define orawls::domain (
         }
 
       }
+
+      if (($domain_template == 'soa' or $domain_template == 'soa_bpm') and $custom_trust and $trust_keystore_file){
+        exec { "set ssl.trustStore ${domain_name} ${title}":
+          command => "sed -i -e 's|\\\${WL_HOME}/server/lib/DemoTrust\.jks|${$trust_keystore_file}|' ${domain_dir}/bin/setDomainEnv.sh",
+          onlyif  => "grep -q DemoTrust ${domain_dir}/bin/setDomainEnv.sh",
+          path    => $exec_path,
+          user    => $os_user,
+          group   => $os_group,
+          require => [
+            Exec["execwlst ${domain_name} ${title}"],
+            Exec["execwlst ${domain_name} extension ${title}"],
+          ],
+        }
+      }
     }
 
     exec { "domain.py ${domain_name} ${title}":
